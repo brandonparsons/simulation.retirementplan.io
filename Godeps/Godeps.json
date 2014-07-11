@@ -1,0 +1,31 @@
+{
+	"ImportPath": "bitbucket.org/retirementplanio/go-simulation",
+	"GoVersion": "go1.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/GaryBoone/GoStats/stats",
+			"Rev": "1993eafbef57be29ee8f5eb9d26a22f20ff3c207"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/now",
+			"Rev": "caef738a54cb159a5fe083e01609bc6873a84501"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-18-gbc9499c",
+			"Rev": "bc9499caa0f45ee5edb2f0209fbd61fbf3d9018f"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "6807e777504f54ad073ecef66747de158294b639"
+		},
+		{
+			"ImportPath": "github.com/skelterjohn/go.matrix",
+			"Rev": "daa59528eefd43623a4c8e36373a86f9eef870a2"
+		},
+		{
+			"ImportPath": "github.com/zenazn/goji",
+			"Rev": "32da78b2dfeb2f5353e3b14a54a1b30d356e979c"
+		}
+	]
+}
