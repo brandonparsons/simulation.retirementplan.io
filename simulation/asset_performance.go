@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"sort"
 
-	goStats "github.com/GaryBoone/GoStats/stats"
 	goMatrix "github.com/skelterjohn/go.matrix"
 )
 
@@ -23,10 +22,6 @@ import (
 	..
 */
 
-///////////
-// Types //
-///////////
-
 type AssetPerformanceResults struct {
 	RealEstatePerformance ReturnsList
 	InflationPerformance  ReturnsList
@@ -36,31 +31,6 @@ type AssetPerformanceResults struct {
 type ReturnResultsByAsset map[string]ReturnsList
 
 type ReturnsList []float64
-
-/////////////////////
-// 'Class Methods' //
-/////////////////////
-
-// NumberOfMonths determines the number of months the simulation must cover,
-// based on the user's ages.
-// Params: none
-// Returns: integer
-func (s *SimulationData) NumberOfMonthsToSimulate() int {
-	male := s.Parameters.MaleAge
-	female := s.Parameters.FemaleAge
-
-	var yearsToRun int
-	if male == 0 {
-		yearsToRun = 120 - female
-	} else if female == 0 {
-		yearsToRun = 120 - male
-	} else {
-		ages := []float64{float64(s.Parameters.MaleAge), float64(s.Parameters.FemaleAge)}
-		yearsToRun = 120 - int(goStats.StatsMin(ages))
-	}
-
-	return 12 * yearsToRun
-}
 
 // GenerateAssetPerformance generates performance results for real estate,
 // inflation and the overall portfolio, and returns as a struct of float arrays.
@@ -114,11 +84,11 @@ func (s *SimulationData) GeneratePortfolioPerformance(numberOfPeriods int) Retur
 	// portfolio weight.
 	portfolioReturns := make(ReturnsList, numberOfPeriods)
 	for periodIndex := 0; periodIndex < numberOfPeriods; periodIndex++ {
-		returnSum := 0.0
+		sum := 0.0
 		for _, periodReturns := range weightedReturns {
-			returnSum += periodReturns[periodIndex]
+			sum += periodReturns[periodIndex]
 		}
-		portfolioReturns[periodIndex] = returnSum
+		portfolioReturns[periodIndex] = sum
 	}
 
 	return portfolioReturns
@@ -130,7 +100,6 @@ func (s *SimulationData) GeneratePortfolioPerformance(numberOfPeriods int) Retur
 // Params: numberOfPeriods int -- number of periods to model
 // Returns: ReturnResultsByAsset
 func (s *SimulationData) GenerateReturns(numberOfPeriods int) ReturnResultsByAsset {
-
 	assetPerformanceData := s.AssetPerformanceData // map[string]Distribution
 	assetClassIds := s.AssetClassIds()             // []string
 	numberOfAssets := len(assetClassIds)
@@ -287,10 +256,6 @@ func (s *SimulationData) AssetClassIds() []string {
 
 	return assetClassIds
 }
-
-///////////////
-// Utilities //
-///////////////
 
 // generateRandomsFromDistribution is a utility method that will generate a set
 // of random values from a given normal distribution

@@ -85,31 +85,3 @@ func ValidateAndHandleJsonInput(r *http.Request) (response, int) {
 		"simulation_results": resp,
 	}, http.StatusOK
 }
-
-type simulationResponse struct {
-	Results []IndividualRunResults `json:"results"`
-}
-
-func (s *SimulationData) simulate() simulationResponse {
-
-	// prettyPrint(s.NumberOfMonthsToSimulate())
-	// prettyPrint(s.GenerateAssetPerformance(10))
-
-	n := s.NumberOfTrials
-	type empty struct{}
-	results := make([]IndividualRunResults, n)
-	notifier := make(chan empty, n)
-	for trial := uint(0); trial < n; trial++ {
-		go func(i uint) {
-			results[i] = s.RunIndividualSimulation()
-			notifier <- empty{}
-		}(trial)
-	}
-
-	// Wait for goroutines to finish
-	for i := uint(0); i < n; i++ {
-		<-notifier
-	}
-
-	return simulationResponse{Results: results}
-}

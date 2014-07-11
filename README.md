@@ -1,14 +1,12 @@
 Retirement Simulation - Golang
 ===============================
 
-Runtime Dependencies
---------------------
-
-For zero-downtime re-deploy etc:
-- `einhorn` (Ruby)
+Monte Carlo retirement simulation server for RetirementPlan.io.  Currently meant to be called by the Rails API server, not by the client.
 
 Running
 -------
+
+If using einhorn for zero-downtime deployment:
 
 - `gem install einhorn`
 - `einhorn -b 127.0.0.1:1234 -m manual go_retirement_simulation`
@@ -16,33 +14,31 @@ Running
 Development
 ------------
 
-- `get get .`
-- `go run main.go` or `gin`
+Dependencies:
+
+- `godep restore`
+- *(update dependencies)* `godep save`
+
+Testing:
+
+- `godep go test ./...`
+
+Use `gin` for server reloading during development:
+
+- `AUTH_TOKEN=acbd gin`
+
 
 Examples
 --------
 
-```
-http POST 'http://localhost:3000/simulation' \
-'Authorization: abcd' \
-in_todays_dollars:=true \
-number_of_trials:=2 \
-selected_portfolio_weights:='{ "INTL-BOND": 0.65, "US-REALESTATE": 0.30, "CDN-REALESTATE": 0.05 }' \ 
-inflation:='{"mean": 0.00046346514957523,"std_dev": 0.00024792742828969}' \
-real_estate:='{"mean": 0.0029064094738571,"std_dev": 0.014660011854061}' \
-
-simulation_parameters:='{ "male": true, "married": true, "retired": false, "male_age": 29, "retirement_age_male": 62, "female_age": 30, "retirement_age_female": 35, "expenses_multiplier": 1.6, "fraction_single_income": 65, "starting_assets": 125000, "income": 120000, "current_tax": 35, "salary_increase": 3, "income_inflation_index": 20, "expenses_inflation_index": 100, "retirement_income": 12000, "retirement_expenses": 80, "retirement_tax": 25, "life_insurance": 250000, "include_home": true, "home_value": 550000, "sell_house_in": 25, "new_home_relative_value": 65 }' \
-expenses:='[{"amount": 300,"frequency": "monthly","onetime_on": null,"ends": null},{"amount": 25000,"frequency": "onetime","onetime_on": 1461564000000,"ends": null}]' \
-```
-
-
 ```ruby
+
 require 'faraday'
 require 'json'
 
 payload = {
     in_todays_dollars: true,
-    number_of_trials: 2,
+    number_of_trials: 1000,
     selected_portfolio_weights: { 
         "INTL-BOND" => 0.65, 
         "US-REALESTATE" => 0.30, 
@@ -126,4 +122,7 @@ def get_response(conn, payload)
     end.body)
     return response
 end
+
+ap get_response(conn, payload)
+
 ```
