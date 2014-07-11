@@ -78,8 +78,19 @@ payload = {
         std_dev: 0.014660011854061
     },
     expenses: [
+        
+        {amount: 100, frequency: 'weekly', onetime_on: nil, ends: nil},
+        {amount: 25, frequency: 'weekly', onetime_on: nil, ends: nil},
+        {amount: 50, frequency: 'weekly', onetime_on: nil, ends: nil},
+        {amount: 45, frequency: 'weekly', onetime_on: nil, ends: 1420095599}, # dec-31-2014
+
         {amount: 300, frequency: 'monthly', onetime_on: nil, ends: nil},
-        {amount: 25000, frequency: 'onetime', onetime_on: 1461564000000, ends: nil}
+        
+        {amount: 3000, frequency: 'annual', onetime_on: nil, ends: 1422773999}, # Jan-31-2015
+        {amount: 5000, frequency: 'annual', onetime_on: nil, ends: nil},
+
+        {amount: 25000, frequency: 'onetime', onetime_on: 1409551199, ends: nil}, # Aug-31-2014
+
     ], 
     simulation_parameters: {
         male: true,

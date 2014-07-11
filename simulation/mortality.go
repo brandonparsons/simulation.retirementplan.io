@@ -127,13 +127,27 @@ var mortalityTable = [][]float64{
 	[]float64{0.913855, 0.913855},
 	[]float64{1.000000, 1.000000}}
 
+// maleDiesAt Function for male mortality, delegates to diesAt function
+// Receiver: None
+// Params: age -- int
+// Returns: bool
 func maleDiesAt(age int) bool {
 	return diesAt("male", age)
 }
+
+// femaleDiesAt Function for male mortality, delegates to diesAt function
+// Receiver: None
+// Params: age -- int
+// Returns: bool
 func femaleDiesAt(age int) bool {
 	return diesAt("female", age)
 }
 
+// diesAt Rand-based function that determines if male/female lives or dies for
+// a given age
+// Receiver: None
+// Params: age -- int
+// Returns: bool
 func diesAt(gender string, age int) bool {
 	if age > 120 {
 		return true
