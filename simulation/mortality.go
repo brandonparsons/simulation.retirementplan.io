@@ -127,10 +127,10 @@ var mortalityTable = [][]float64{
 	[]float64{0.913855, 0.913855},
 	[]float64{1.000000, 1.000000}}
 
-func MaleDiesAt(age int) bool {
+func maleDiesAt(age int) bool {
 	return diesAt("male", age)
 }
-func FemaleDiesAt(age int) bool {
+func femaleDiesAt(age int) bool {
 	return diesAt("female", age)
 }
 

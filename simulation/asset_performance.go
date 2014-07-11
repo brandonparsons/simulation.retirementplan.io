@@ -22,36 +22,36 @@ import (
 	..
 */
 
-type AssetPerformanceResults struct {
-	RealEstatePerformance ReturnsList
-	InflationPerformance  ReturnsList
-	PortfolioPerformance  ReturnsList
+type assetPerformanceResults struct {
+	realEstatePerformance returnsList
+	inflationPerformance  returnsList
+	portfolioPerformance  returnsList
 }
 
-type ReturnResultsByAsset map[string]ReturnsList
+type returnResultsByAsset map[string]returnsList
 
-type ReturnsList []float64
+type returnsList []float64
 
-// GenerateAssetPerformance generates performance results for real estate,
+// generateAssetPerformance generates performance results for real estate,
 // inflation and the overall portfolio, and returns as a struct of float arrays.
 // Receiver: SimulationData
 // Params: numberOfPeriods int -- number of periods to model
-// Returns: AssetPerformanceResults
-func (s *SimulationData) GenerateAssetPerformance(numberOfPeriods int) AssetPerformanceResults {
-	return AssetPerformanceResults{
-		RealEstatePerformance: s.RealEstateRandoms(numberOfPeriods),
-		InflationPerformance:  s.InflationRandoms(numberOfPeriods),
-		PortfolioPerformance:  s.GeneratePortfolioPerformance(numberOfPeriods),
+// Returns: assetPerformanceResults
+func (s *SimulationData) generateAssetPerformance(numberOfPeriods int) assetPerformanceResults {
+	return assetPerformanceResults{
+		realEstatePerformance: s.realEstateRandoms(numberOfPeriods),
+		inflationPerformance:  s.inflationRandoms(numberOfPeriods),
+		portfolioPerformance:  s.generatePortfolioPerformance(numberOfPeriods),
 	}
 }
 
-// GeneratePortfolioPerformance Consolidates the asset-level data into a single
+// generatePortfolioPerformance Consolidates the asset-level data into a single
 // value for the user's selected portfolio.
 // Receiver: SimulationData
 // Params: numberOfPeriods int -- number of periods to model
-// Returns: ReturnsList ([]float64)
-func (s *SimulationData) GeneratePortfolioPerformance(numberOfPeriods int) ReturnsList {
-	assetPerformance := s.GenerateReturns(numberOfPeriods)
+// Returns: returnsList ([]float64)
+func (s *SimulationData) generatePortfolioPerformance(numberOfPeriods int) returnsList {
+	assetPerformance := s.generateReturns(numberOfPeriods)
 	/* assetPerformance is of the following form:
 		{
 	    	"CDN-REALESTATE": {0.00046232370381282806, 0.0003000276461659901, 0.00039978092717385394},
@@ -72,7 +72,7 @@ func (s *SimulationData) GeneratePortfolioPerformance(numberOfPeriods int) Retur
 	// weightedReturns will be a map[string][]float64 where the keys are the
 	// security ID's, and the values will be an array of the weighted returns
 	// in each period.
-	weightedReturns := ReturnResultsByAsset{}
+	weightedReturns := returnResultsByAsset{}
 	for securityId, portfolioWeightOfAsset := range portfolioWeights {
 		for _, periodReturn := range assetPerformance[securityId] {
 			weightedReturns[securityId] = append(weightedReturns[securityId], periodReturn*portfolioWeightOfAsset)
@@ -82,7 +82,7 @@ func (s *SimulationData) GeneratePortfolioPerformance(numberOfPeriods int) Retur
 	// Combine the weightedReturns into a portfolio return in each period this
 	// is a straight sum as we have already weighted the asset returns by
 	// portfolio weight.
-	portfolioReturns := make(ReturnsList, numberOfPeriods)
+	portfolioReturns := make(returnsList, numberOfPeriods)
 	for periodIndex := 0; periodIndex < numberOfPeriods; periodIndex++ {
 		sum := 0.0
 		for _, periodReturns := range weightedReturns {
@@ -94,17 +94,17 @@ func (s *SimulationData) GeneratePortfolioPerformance(numberOfPeriods int) Retur
 	return portfolioReturns
 }
 
-// GenerateReturns generates performance specifically for assets, and returns
+// generateReturns generates performance specifically for assets, and returns
 // separately by asset class as a map
 // Receiver: SimulationData
 // Params: numberOfPeriods int -- number of periods to model
-// Returns: ReturnResultsByAsset
-func (s *SimulationData) GenerateReturns(numberOfPeriods int) ReturnResultsByAsset {
+// Returns: returnResultsByAsset
+func (s *SimulationData) generateReturns(numberOfPeriods int) returnResultsByAsset {
 	assetPerformanceData := s.AssetPerformanceData // map[string]Distribution
-	assetClassIds := s.AssetClassIds()             // []string
+	assetClassIds := s.assetClassIds()             // []string
 	numberOfAssets := len(assetClassIds)
 
-	choleskyApplied := s.ApplyCholeskyDecomposition(numberOfPeriods)
+	choleskyApplied := s.applyCholeskyDecomposition(numberOfPeriods)
 
 	prices := goMatrix.Zeros(numberOfPeriods, numberOfAssets)
 
@@ -165,7 +165,7 @@ func (s *SimulationData) GenerateReturns(numberOfPeriods int) ReturnResultsByAss
 	/* */
 
 	results := asRelativeReturns.Arrays()    // [][]float64
-	resultsByAsset := ReturnResultsByAsset{} // map[string][]float64
+	resultsByAsset := returnResultsByAsset{} // map[string][]float64
 	for _, assetClassId := range assetClassIds {
 		resultsByAsset[assetClassId] = make([]float64, numberOfPeriods)
 	}
@@ -180,45 +180,45 @@ func (s *SimulationData) GenerateReturns(numberOfPeriods int) ReturnResultsByAss
 	return resultsByAsset
 }
 
-// CholeskyMatrix takes the array of floats provided by the JSON data, and
+// choleskyMatrix takes the array of floats provided by the JSON data, and
 // converts it to a matrix.
 // Receiver: SimulationData
 // Params: none
 // Returns: *goMatrix.DenseMatrix
-func (s *SimulationData) CholeskyMatrix() *goMatrix.DenseMatrix {
+func (s *SimulationData) choleskyMatrix() *goMatrix.DenseMatrix {
 	vals := s.CholeskyDecomposition
 	noOfVals := float64(len(vals))
 	noRows := int(math.Pow(noOfVals, 0.5))
 	return goMatrix.MakeDenseMatrix(vals, noRows, noRows)
 }
 
-// InflationRandoms generates random inflation performance of a given length
+// inflationRandoms generates random inflation performance of a given length
 // based on the statistics in the SimulationData struct
 // Receiver: SimulationData
 // Params: numberOfPeriods int -- number of periods to generate performance for
-// Returns: ReturnsList
-func (s *SimulationData) InflationRandoms(numberOfPeriods int) ReturnsList {
+// Returns: returnsList
+func (s *SimulationData) inflationRandoms(numberOfPeriods int) returnsList {
 	return generateRandomsFromDistribution(s.Inflation, numberOfPeriods)
 }
 
-// RealEstateRandoms generates random real estate performance of a given length
+// realEstateRandoms generates random real estate performance of a given length
 // based on the statistics in the SimulationData struct
 // Receiver: SimulationData
 // Params: numberOfPeriods int -- number of periods to generate performance for
-// Returns: ReturnsList
-func (s *SimulationData) RealEstateRandoms(numberOfPeriods int) ReturnsList {
+// Returns: returnsList
+func (s *SimulationData) realEstateRandoms(numberOfPeriods int) returnsList {
 	return generateRandomsFromDistribution(s.RealEstate, numberOfPeriods)
 }
 
-// ApplyCholeskyDecomposition returns a matrix with an applied cholesky
+// applyCholeskyDecomposition returns a matrix with an applied cholesky
 // decomposition - i.e. it creates the random normal matrix, and applies the
 // cholesky matrix. The number of assets is implied from the cholesky
 // decomposition matrix size.
 // Receiver: SimulationData
 // Params: numberOfPeriods int -- number of periods to generate performance for
 // Returns: *goMatrix.DenseMatrix
-func (s *SimulationData) ApplyCholeskyDecomposition(numberOfPeriods int) *goMatrix.DenseMatrix {
-	choleskyDecomposition := s.CholeskyMatrix()
+func (s *SimulationData) applyCholeskyDecomposition(numberOfPeriods int) *goMatrix.DenseMatrix {
+	choleskyDecomposition := s.choleskyMatrix()
 	numberOfAssets := choleskyDecomposition.Cols()
 	randomValueMatrix := randomNormalsMatrix(numberOfPeriods, numberOfAssets)
 	choleskyApplied := zerosMatrix(numberOfPeriods, numberOfAssets)
@@ -239,12 +239,12 @@ func (s *SimulationData) ApplyCholeskyDecomposition(numberOfPeriods int) *goMatr
 	return choleskyApplied
 }
 
-// AssetClassIds returns the asset class IDs of interest - those that the user
+// assetClassIds returns the asset class IDs of interest - those that the user
 // has invested in.
 // Receiver: SimulationData
 // Params: None
 // Returns: []string
-func (s *SimulationData) AssetClassIds() []string {
+func (s *SimulationData) assetClassIds() []string {
 	mapWithAssetClasses := s.SelectedPortfolioWeights
 	assetClassIds := make([]string, len(mapWithAssetClasses))
 	i := 0

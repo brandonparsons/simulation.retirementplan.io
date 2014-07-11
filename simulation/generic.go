@@ -16,7 +16,7 @@ func prettyPrint(obj interface{}) {
 	log.Printf("%# v", pretty.Formatter(obj))
 }
 
-func Meanf(arr []float64) float64 {
+func meanf(arr []float64) float64 {
 	l := len(arr)
 	var mean float64
 	for i := 0; i < l; i++ {
@@ -25,7 +25,7 @@ func Meanf(arr []float64) float64 {
 	return mean
 }
 
-func Mean(arr []int) float64 {
+func mean(arr []int) float64 {
 	l := len(arr)
 	var mean float64
 	for i := 0; i < l; i++ {
@@ -35,7 +35,7 @@ func Mean(arr []int) float64 {
 	return mean
 }
 
-func Contains(s []int, e int) bool {
+func contains(s []int, e int) bool {
 	for _, a := range s {
 		if a == e {
 			return true

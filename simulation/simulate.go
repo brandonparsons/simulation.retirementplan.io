@@ -7,10 +7,10 @@ import (
 )
 
 type simulationResponse struct {
-	Results []IndividualRunResults `json:"results"`
+	Results []individualRunResults `json:"results"`
 }
 
-type IndividualRunResults struct {
+type individualRunResults struct {
 	// TimeStep []LifeResult
 	HappinessLevel int    `json:"happiness_level"`
 	Exclamation    string `json:"exclamation"`
@@ -29,14 +29,14 @@ type IndividualRunResults struct {
 // Returns: simulationResponse
 func (s *SimulationData) simulate() simulationResponse {
 	n := s.NumberOfTrials
-	results := make([]IndividualRunResults, n)
+	results := make([]individualRunResults, n)
 
 	type empty struct{}
 	notifier := make(chan empty, n)
 
 	for trial := uint(0); trial < n; trial++ {
 		go func(i uint) {
-			results[i] = s.RunIndividualSimulation()
+			results[i] = s.runIndividualSimulation()
 			notifier <- empty{}
 		}(trial)
 	}
@@ -49,11 +49,11 @@ func (s *SimulationData) simulate() simulationResponse {
 	return simulationResponse{Results: results}
 }
 
-// NumberOfMonthsToSimulate determines the number of months the simulation must cover,
+// numberOfMonthsToSimulate determines the number of months the simulation must cover,
 // based on the user's ages.
 // Params: none
 // Returns: integer
-func (s *SimulationData) NumberOfMonthsToSimulate() int {
+func (s *SimulationData) numberOfMonthsToSimulate() int {
 	male := s.Parameters.MaleAge
 	female := s.Parameters.FemaleAge
 
@@ -70,16 +70,16 @@ func (s *SimulationData) NumberOfMonthsToSimulate() int {
 	return 12 * yearsToRun
 }
 
-// RunIndividualSimulation is a single loop through the simulation. It is called
+// runIndividualSimulation is a single loop through the simulation. It is called
 // by the `simulate` function
 // Receiver: SimulationData
 // Params: none
-// Returns: IndividualRunResults
-func (s *SimulationData) RunIndividualSimulation() IndividualRunResults {
-	// perf := s.GenerateAssetPerformance(s.NumberOfMonthsToSimulate())
+// Returns: individualRunResults
+func (s *SimulationData) runIndividualSimulation() individualRunResults {
+	// perf := s.GenerateAssetPerformance(s.numberOfMonthsToSimulate())
 	// log.Println(perf)
 
-	return IndividualRunResults{
+	return individualRunResults{
 		HappinessLevel: rand.Intn(100),
 		Exclamation:    "Booyah!",
 	}
