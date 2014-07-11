@@ -16,6 +16,10 @@ import (
 	"bitbucket.org/retirementplanio/go-simulation/simulation"
 )
 
+///////////////
+// Utilities //
+///////////////
+
 type response map[string]interface{}
 
 func (r response) String() (s string) {
@@ -27,6 +31,10 @@ func (r response) String() (s string) {
 	s = string(b)
 	return
 }
+
+//////////
+// Main //
+//////////
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -76,9 +84,9 @@ func secured(c *web.C, h http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-////////////
-// Routes //
-////////////
+////////////////////
+// Route Handlers //
+////////////////////
 
 func root(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Go Simulation API")
