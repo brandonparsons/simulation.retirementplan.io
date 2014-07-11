@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +15,18 @@ import (
 
 	"bitbucket.org/retirementplanio/go-simulation/simulation"
 )
+
+type response map[string]interface{}
+
+func (r response) String() (s string) {
+	b, err := json.Marshal(r)
+	if err != nil {
+		s = ""
+		return
+	}
+	s = string(b)
+	return
+}
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -52,7 +65,9 @@ func secured(c *web.C, h http.Handler) http.Handler {
 		providedToken := r.Header.Get("Authorization")
 
 		if (providedToken != authToken) || (providedToken == "") {
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(w, response{"success": false, "message": "You must be authorized to perform that action."})
 			return
 		}
 
@@ -77,13 +92,13 @@ func health(w http.ResponseWriter, r *http.Request) {
 
 func simulateHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	resp, statusCode := simulation.ValidateAndHandleJsonInput(r)
+	apiResponse := simulation.ValidateAndHandleJsonInput(r)
 	end := time.Since(start)
 
 	log.Printf("Processing request from %s in %vs", r.RemoteAddr, end)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	fmt.Fprint(w, resp)
+	w.WriteHeader(apiResponse.StatusCode)
+	fmt.Fprint(w, response(apiResponse.Response))
 	return
 }

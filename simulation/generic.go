@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
 	"log"
 
 	"github.com/kr/pretty"
@@ -15,18 +14,6 @@ func panicIf(err error) {
 
 func prettyPrint(obj interface{}) {
 	log.Printf("%# v", pretty.Formatter(obj))
-}
-
-type response map[string]interface{}
-
-func (r response) String() (s string) {
-	b, err := json.Marshal(r)
-	if err != nil {
-		s = ""
-		return
-	}
-	s = string(b)
-	return
 }
 
 func Meanf(arr []float64) float64 {

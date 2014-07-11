@@ -5,7 +5,6 @@ package simulation
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -63,25 +62,35 @@ type Distribution struct {
 	StdDev float64 `json:"std_dev"`
 }
 
-func ValidateAndHandleJsonInput(r *http.Request) (response, int) {
+type ApiResponse struct {
+	Response   map[string]interface{}
+	StatusCode int
+}
+
+func ValidateAndHandleJsonInput(r *http.Request) ApiResponse {
 	decoder := json.NewDecoder(r.Body)
 
 	var simulationData SimulationData
 
 	err := decoder.Decode(&simulationData)
 	if err != nil {
-		log.Println("Invalid JSON structure.")
-		return response{
-			"success": false,
-			"message": "Invalid JSON structure.",
-		}, http.StatusBadRequest
+		return ApiResponse{
+			Response: map[string]interface{}{
+				"success": false,
+				"message": "Invalid JSON structure.",
+			},
+			StatusCode: http.StatusBadRequest,
+		}
 	}
 
 	prettyPrint(simulationData)
 	resp := simulationData.simulate()
 
-	return response{
-		"success":            true,
-		"simulation_results": resp,
-	}, http.StatusOK
+	return ApiResponse{
+		Response: map[string]interface{}{
+			"success":            true,
+			"simulation_results": resp,
+		},
+		StatusCode: http.StatusOK,
+	}
 }
