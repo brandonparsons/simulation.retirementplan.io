@@ -3,16 +3,73 @@
 // JSON data.
 package simulation
 
-import goStats "github.com/GaryBoone/GoStats/stats"
+import (
+	"encoding/json"
+	"io"
+	"log"
+	"math"
+	"net/http"
 
-type simulationResponse []trialResult
-type trialResult []simulationTimeStep
+	goStats "github.com/GaryBoone/GoStats/stats"
+	"github.com/kr/pretty"
+)
+
+type ApiResponse struct {
+	Response   map[string]interface{}
+	StatusCode int
+}
+
+// ValidateAndHandleJsonInput is the main entry point into this package given
+// a POST'ed JSON body.
+// Receiver: None
+// Params: j io.ReadCloser (via r.Body)
+// Returns: ApiResponse {Response/StatusCode}
+func ValidateAndHandleJsonInput(j io.ReadCloser) ApiResponse {
+	decoder := json.NewDecoder(j)
+
+	var simulationData SimulationData
+
+	err := decoder.Decode(&simulationData)
+	if err != nil {
+		return ApiResponse{
+			Response: map[string]interface{}{
+				"success": false,
+				"message": "Invalid JSON structure.",
+			},
+			StatusCode: http.StatusBadRequest,
+		}
+	}
+
+	log.Printf("%# v", pretty.Formatter(simulationData))
+	resp := Simulate(&simulationData)
+
+	return ApiResponse{
+		Response: map[string]interface{}{
+			"success":   true,
+			"timesteps": resp,
+		},
+		StatusCode: http.StatusOK,
+	}
+}
+
+type simulationResponse []summarizedTimeStep
+
+// Simulate is the main call for simulations - it runs all of the trials, munges
+// data, etc.
+// Receiver: None
+// Params: s *SimulationData
+// Returns: simulationResponse ([]summarizedTimeStep)
+func Simulate(s *SimulationData) simulationResponse {
+	detailedResults := runSimulations(s)
+	summarizedResults := summarizeResults(detailedResults)
+	return summarizedResults
+}
 
 type simulationTimeStep struct {
-	Assets        float64 `json:"assets"`
-	Income        float64 `json:"income"`
-	Expenses      float64 `json:"expenses"`
-	JsTime        int     `json:"js_time"`
+	assets        float64
+	income        float64
+	expenses      float64
+	jsTime        int
 	maleAge       int
 	femaleAge     int
 	maleAlive     bool
@@ -21,34 +78,14 @@ type simulationTimeStep struct {
 	femaleRetired bool
 }
 
-// numberOfMonthsToSimulate determines the number of months the simulation must
-// cover, based on the user's ages.
-// Params: none
-// Returns: integer
-func (s *SimulationData) numberOfMonthsToSimulate() int {
-	male := s.Parameters.MaleAge
-	female := s.Parameters.FemaleAge
-
-	var yearsToRun int
-	if male == 0 {
-		yearsToRun = 120 - female
-	} else if female == 0 {
-		yearsToRun = 120 - male
-	} else {
-		ages := []float64{float64(s.Parameters.MaleAge), float64(s.Parameters.FemaleAge)}
-		yearsToRun = 120 - int(goStats.StatsMin(ages))
-	}
-
-	return yearsToRun * 12
-}
-
-// simulate is the main call for simulations - it runs all of the trials etc.
-// Receiver: SimulationData
-// Params: none
-// Returns: simulationResponse ([]trialResult)
-func (s *SimulationData) Simulate() simulationResponse {
+// runSimulations Gathers invididual trial results, as passes detailed data up
+// to be summarized.
+// Receiver: None
+// Params: s *SimulationData
+// Returns: [][]simulationTimeStep
+func runSimulations(s *SimulationData) [][]simulationTimeStep {
 	n := s.NumberOfTrials
-	trialResults := make([]trialResult, n)
+	results := make([][]simulationTimeStep, n)
 
 	// This does not change trial-to-trial, do only once.
 	timeSteps := s.applyExpenses(s.numberOfMonthsToSimulate())
@@ -57,7 +94,7 @@ func (s *SimulationData) Simulate() simulationResponse {
 	notifier := make(chan empty, n)
 	for trial := 0; trial < n; trial++ {
 		go func(i int) {
-			trialResults[i] = s.runIndividualSimulation(timeSteps)
+			results[i] = s.runIndividualSimulation(timeSteps)
 			notifier <- empty{}
 		}(trial)
 	}
@@ -67,268 +104,92 @@ func (s *SimulationData) Simulate() simulationResponse {
 		<-notifier
 	}
 
-	return trialResults
+	return results
 }
 
-// runIndividualSimulation is a single loop through the simulation. It is called
-// by the `simulate` function
-// Receiver: SimulationData
-// Params: timeSteps []*timeStep -- prebuilt date steps with expenses applied
-// Returns: trialResult ([]simulationTimeStep)
-func (s *SimulationData) runIndividualSimulation(timeSteps []*timeStep) trialResult {
+type summarizedTimeStep struct {
+	AssetsMean   float64 `json:"assets_mean"`
+	AssetsCILow  float64 `json:"assets_ci_low"`
+	AssetsCIHigh float64 `json:"assets_ci_high"`
 
-	// Copy in data from timeSteps (includes date and expenses)
-	trialResult := make([]simulationTimeStep, len(timeSteps))
-	for i, v := range timeSteps {
-		trialResult[i] = simulationTimeStep{
-			Expenses: v.expenses,
-			JsTime:   v.date * 1000,
-		}
-	}
+	IncomeMean   float64 `json:"income_mean"`
+	IncomeCILow  float64 `json:"income_ci_low"`
+	IncomeCIHigh float64 `json:"income_ci_high"`
 
-	/* Gather starting data */
+	ExpensesMean   float64 `json:"expenses_mean"`
+	ExpensesCILow  float64 `json:"expenses_ci_low"`
+	ExpensesCIHigh float64 `json:"expenses_ci_high"`
 
-	married := s.Parameters.Married
-	male := s.Parameters.Male
-	maleAge := s.Parameters.MaleAge
-	femaleAge := s.Parameters.FemaleAge
-	retirementExpenseFactor := s.Parameters.RetirementExpenses
+	OutOfMoneyPercentage float64 `json:"out_of_money_percentage"`
+	JsTime               int     `json:"js_time"`
+}
 
-	oneHasAlreadyDied := false // Outside of loop -- using as flag
+func summarizeResults(detailedData [][]simulationTimeStep) []summarizedTimeStep {
+	numberOfTrials := len(detailedData)
+	numberOfPeriods := len(detailedData[0])
 
-	assetPerformance := s.generateAssetPerformance(s.numberOfMonthsToSimulate())
+	// Prep the slice
+	summarizedResults := make([]summarizedTimeStep, numberOfPeriods)
 
-	var maleAlive bool
-	var femaleAlive bool
-	if married {
-		maleAlive = true
-		femaleAlive = true
-	} else {
-		if male {
-			maleAlive = true
-			femaleAlive = false
-		} else {
-			maleAlive = false
-			femaleAlive = true
-		}
-	}
+	for period := 0; period < numberOfPeriods; period++ {
 
-	trialResult[0].Income = s.Parameters.Income / 12.0 // Monthly
+		outOfMoneyOccurences := 0.0              // initialize value
+		jsTime := detailedData[0][period].jsTime // same in every trial
 
-	/* */
+		/* 	Transpose the arrays so that we have a list of asset/income/expense
+		results by period, instead of by trial. */
 
-	/* Do most of the calculation in one loop */
+		periodAssetResults := make([]float64, numberOfTrials)
+		periodIncomeResults := make([]float64, numberOfTrials)
+		periodExpensesResults := make([]float64, numberOfTrials)
 
-	for monthIndex := range trialResult {
+		for trialIndex, arrayOfTrialResults := range detailedData {
+			periodAssetResults[trialIndex] = arrayOfTrialResults[period].assets
+			periodIncomeResults[trialIndex] = arrayOfTrialResults[period].income
+			periodExpensesResults[trialIndex] = arrayOfTrialResults[period].expenses
 
-		// Mortality results: check alive, retirement & dead
-		if monthIndex != 0 && monthIndex%12 == 0 {
-			// Mortality is tied to age, which only changes every 12 months
-			if maleAlive {
-				maleAge++
-				maleAlive = !maleDiesAt(maleAge)
-			}
-			if femaleAlive {
-				femaleAge++
-				femaleAlive = !femaleDiesAt(femaleAge)
+			if arrayOfTrialResults[period].assets < 0 {
+				outOfMoneyOccurences++
 			}
 		}
 
-		// Handle male age / retired
-		trialResult[monthIndex].maleAlive = maleAlive
-		trialResult[monthIndex].maleAge = maleAge
-		if maleAge >= s.Parameters.RetirementAgeMale {
-			trialResult[monthIndex].maleRetired = true
-		} else {
-			trialResult[monthIndex].maleRetired = false
-		}
+		/* */
 
-		// Handle female age / retired
-		trialResult[monthIndex].femaleAlive = femaleAlive
-		trialResult[monthIndex].femaleAge = femaleAge
-		if femaleAge >= s.Parameters.RetirementAgeFemale {
-			trialResult[monthIndex].femaleRetired = true
-		} else {
-			trialResult[monthIndex].femaleRetired = false
-		}
+		/* Generate descriptive statistics for each period */
 
-		// Apply the retirement expense reduction. If married, and both are
-		// retired, or if single, and retired, cut expenses down by the provided
-		// factor.
-		var applyRetirementExpenseReduction bool
-		if married {
-			applyRetirementExpenseReduction = trialResult[monthIndex].maleRetired && trialResult[monthIndex].femaleRetired
-		} else {
-			if male {
-				applyRetirementExpenseReduction = trialResult[monthIndex].maleRetired
-			} else {
-				applyRetirementExpenseReduction = trialResult[monthIndex].femaleRetired
-			}
-		}
-		if applyRetirementExpenseReduction {
-			trialResult[monthIndex].Expenses = trialResult[monthIndex].Expenses * (retirementExpenseFactor / 100)
-		}
+		outOfMoneyPercentage := outOfMoneyOccurences / float64(numberOfTrials)
 
-		// Handle death.  Add life insurance if just died, and any timestep
-		// where one parter is dead apply expenses reduction. Life insurance
-		// portion is relevant if married or single. Expenses reduction is only
-		// relevant if married.
-		var someoneHasDied bool
-		if married {
-			someoneHasDied = !(trialResult[monthIndex].maleAlive && trialResult[monthIndex].femaleAlive)
-		} else {
-			someoneHasDied = (male && !trialResult[monthIndex].maleAlive) || (!male && !trialResult[monthIndex].femaleAlive)
-		}
+		assetsMean := goStats.StatsMean(periodAssetResults)
+		assetsStdDev := goStats.StatsSampleStandardDeviation(periodAssetResults)
+		assetsCIFactor := 1.96 * assetsStdDev / math.Pow(float64(numberOfTrials), 0.5)
 
-		if someoneHasDied {
-			if !oneHasAlreadyDied {
-				oneHasAlreadyDied = true
-				trialResult[monthIndex].Income += s.Parameters.LifeInsurance
-			}
+		incomeMean := goStats.StatsMean(periodIncomeResults)
+		incomeStdDev := goStats.StatsSampleStandardDeviation(periodIncomeResults)
+		incomeCIFactor := 1.96 * incomeStdDev / math.Pow(float64(numberOfTrials), 0.5)
 
-			if s.Parameters.ExpensesMultiplier != 0.0 {
-				trialResult[monthIndex].Expenses = trialResult[monthIndex].Expenses / s.Parameters.ExpensesMultiplier
-			}
+		expensesMean := goStats.StatsMean(periodExpensesResults)
+		expensesStdDev := goStats.StatsSampleStandardDeviation(periodExpensesResults)
+		expensesCIFactor := 1.96 * expensesStdDev / math.Pow(float64(numberOfTrials), 0.5)
+
+		/* */
+
+		summarizedResults[period] = summarizedTimeStep{
+			AssetsMean:   assetsMean,
+			AssetsCILow:  assetsMean - assetsCIFactor,
+			AssetsCIHigh: assetsMean + assetsCIFactor,
+
+			IncomeMean:   incomeMean,
+			IncomeCILow:  incomeMean - incomeCIFactor,
+			IncomeCIHigh: incomeMean + incomeCIFactor,
+
+			ExpensesMean:   expensesMean,
+			ExpensesCILow:  expensesMean - expensesCIFactor,
+			ExpensesCIHigh: expensesMean + expensesCIFactor,
+
+			OutOfMoneyPercentage: outOfMoneyPercentage,
+			JsTime:               jsTime,
 		}
 	}
 
-	/* */
-
-	/* Apply income events (retirement changes, salary increases) */
-
-	applyFractionForSingleIncome := false
-	retired := false
-	haveNotAppliedSingleIncomeFraction := true
-
-	if married && (s.Parameters.MaleAge < s.Parameters.RetirementAgeMale) && (s.Parameters.FemaleAge < s.Parameters.RetirementAgeFemale) && (s.Parameters.FractionSingleIncome != 0) {
-		applyFractionForSingleIncome = true
-	}
-
-	for monthIndex := range trialResult {
-		if monthIndex == 0 {
-			continue
-		}
-
-		// Bring forward last week's income. The zero-index case was handled
-		// above by dividing provided income by 12.
-		trialResult[monthIndex].Income = trialResult[monthIndex-1].Income
-
-		// Apply fraction for single income if someone is retired, and we
-		// haven't already. `applyFractionForSingleIncome` implies married.
-		if applyFractionForSingleIncome && haveNotAppliedSingleIncomeFraction {
-			if trialResult[monthIndex].maleRetired || trialResult[monthIndex].femaleRetired {
-				haveNotAppliedSingleIncomeFraction = false
-				trialResult[monthIndex].Income = trialResult[monthIndex].Income * (s.Parameters.FractionSingleIncome / 100)
-			}
-		}
-
-		// Evaluate if we are in a fully-retired state - i.e. both retired if
-		// married, otherwise person is retired.
-		if married {
-			if trialResult[monthIndex].maleRetired && trialResult[monthIndex].femaleRetired {
-				retired = true
-			}
-		} else {
-			if (male && trialResult[monthIndex].maleRetired) || (!male && trialResult[monthIndex].femaleRetired) {
-				retired = true
-			}
-		}
-
-		if retired {
-			trialResult[monthIndex].Income = s.Parameters.RetirementIncome / 12.0
-		} else if monthIndex%12 == 0 {
-			// Apply salary increase if first month of year
-			trialResult[monthIndex].Income = trialResult[monthIndex].Income * (1 + s.Parameters.SalaryIncrease/100)
-		}
-	}
-
-	/* */
-
-	/* Handle inflation projections */
-
-	// Inflation data comes in as monthly values. Convert to a cumulative basis
-	// so it can be cleanly mapped to an array of income/expense values.
-	monthlyInflationFactors := make([]float64, len(assetPerformance.inflationPerformance))
-	currentCumulativeValue := 1.0
-	for monthIndex, monthlyInflation := range assetPerformance.inflationPerformance {
-		appliedInflation := currentCumulativeValue * (1 + monthlyInflation)
-		monthlyInflationFactors[monthIndex] = appliedInflation
-		currentCumulativeValue = appliedInflation
-	}
-
-	// Apply inflation to income and expenses.
-	for monthIndex := range trialResult {
-		// Apply inflation to expenses on a monthly basis (it's not tied to pay
-		//raises etc.)
-		expensesInflationFactor := (monthlyInflationFactors[monthIndex]-1)*(s.Parameters.ExpensesInflationIndex/100) + 1
-		trialResult[monthIndex].Expenses = trialResult[monthIndex].Expenses * expensesInflationFactor
-
-		// Apply inflation to income only on a yearly basis -- assume it is tied
-		// to a portion of your raise, rather than your income increased every
-		// month.
-		incomeInflationFactor := 1.0
-		if monthIndex != 0 && monthIndex%12 == 0 {
-			incomeInflationFactor = (monthlyInflationFactors[monthIndex]-1)*(s.Parameters.IncomeInflationIndex/100) + 1
-		}
-		trialResult[monthIndex].Income = trialResult[monthIndex].Income * incomeInflationFactor
-	}
-
-	/* */
-
-	// Apply taxes to income. Include varying tax rates during employment, and
-	// during retirement.
-	for monthIndex := range trialResult {
-		applyRetirementTax := false
-		if married {
-			if trialResult[monthIndex].maleRetired && trialResult[monthIndex].femaleRetired {
-				applyRetirementTax = true
-			}
-		} else {
-			if (male && trialResult[monthIndex].maleRetired) || (!male && trialResult[monthIndex].femaleRetired) {
-				applyRetirementTax = true
-			}
-		}
-
-		if applyRetirementTax {
-			trialResult[monthIndex].Income = trialResult[monthIndex].Income * (1 - s.Parameters.RetirementTax/100)
-		} else {
-			trialResult[monthIndex].Income = trialResult[monthIndex].Income * (1 - s.Parameters.CurrentTax/100)
-		}
-	}
-
-	// If including the home value in the simulation, apply downsize income to
-	// the appropriate time step.
-	if s.Parameters.IncludeHome {
-		houseSaleMonth := s.Parameters.SellHouseIn * 12 // Sell house in provided as year
-		relevantRealEstateReturnData := assetPerformance.realEstatePerformance[0:houseSaleMonth]
-		futureValueFactor := 1.0
-		for _, v := range relevantRealEstateReturnData {
-			futureValueFactor = futureValueFactor * (1 + v)
-		}
-		futureHomeValue := s.Parameters.HomeValue * futureValueFactor
-		trialResult[houseSaleMonth].Assets += futureHomeValue * (1 - s.Parameters.NewHomeRelVal/100)
-	}
-
-	// If everyone has died, reduce the income and expenses to zero.
-	for monthIndex := range trialResult {
-		if !trialResult[monthIndex].maleAlive && !trialResult[monthIndex].femaleAlive {
-			trialResult[monthIndex].Income = 0
-			trialResult[monthIndex].Expenses = 0
-		}
-	}
-
-	// Run through the timeSteps, and adjust the asset balance based on income
-	// shortfall or excess.
-	lastPeriodEndingAssets := s.Parameters.StartingAssets
-	for monthIndex := range trialResult {
-		trialResult[monthIndex].Assets = lastPeriodEndingAssets
-
-		thisMonthPortfolioReturns := lastPeriodEndingAssets * assetPerformance.portfolioPerformance[monthIndex]
-		thisMonthIncomeShortfall := trialResult[monthIndex].Expenses - trialResult[monthIndex].Income
-		thisMonthAssetImpact := thisMonthPortfolioReturns - thisMonthIncomeShortfall
-
-		lastPeriodEndingAssets += thisMonthAssetImpact
-	}
-
-	return trialResult
+	return summarizedResults
 }
