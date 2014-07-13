@@ -1,5 +1,5 @@
 {
-	"ImportPath": "bitbucket.org/retirementplanio/go-simulation",
+	"ImportPath": "bitbucket.org/retirementplanio/simulation.retirementplan.io",
 	"GoVersion": "go1.2",
 	"Deps": [
 		{
