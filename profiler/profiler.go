@@ -38,6 +38,6 @@ func main() {
 		SelectedPortfolioWeights: map[string]float64{"INTL-BOND": 0.65, "US-REALESTATE": 0.3, "CDN-REALESTATE": 0.05},
 	}
 
-	results := s.Simulate()
+	results := simulation.Simulate(&s)
 	fmt.Printf("Length of results: %d\n", len(results))
 }

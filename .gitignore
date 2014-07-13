@@ -1,6 +1,8 @@
 **/*/gin-bin
 gin-bin
 
-callgraph.pdf
+# Profiling
 cpu.pprof
-report.txt
+callgraph.txt
+callgraph.pdf
+callgraph.svg
