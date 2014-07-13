@@ -1,2 +1,6 @@
 **/*/gin-bin
 gin-bin
+
+callgraph.pdf
+cpu.pprof
+report.txt
