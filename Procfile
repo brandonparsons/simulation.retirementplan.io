@@ -1,1 +1,1 @@
-web: go-simulation
+web: simulation.retirementplan.io

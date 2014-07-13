@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"bitbucket.org/retirementplanio/go-simulation/simulation"
+	"bitbucket.org/retirementplanio/simulation.retirementplan.io/simulation"
 	"github.com/davecheney/profile"
 )
 

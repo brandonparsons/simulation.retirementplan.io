@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"time"
 
-	"bitbucket.org/retirementplanio/go-simulation/simulation"
+	"bitbucket.org/retirementplanio/simulation.retirementplan.io/simulation"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 )
