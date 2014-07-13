@@ -6,3 +6,5 @@ cpu.pprof
 callgraph.txt
 callgraph.pdf
 callgraph.svg
+
+.env
