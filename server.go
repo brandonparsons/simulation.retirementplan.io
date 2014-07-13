@@ -10,27 +10,11 @@ import (
 	"os"
 	"runtime"
 	"time"
-	"github.com/zenazn/goji"
-	"github.com/zenazn/goji/web"
 
 	"bitbucket.org/retirementplanio/go-simulation/simulation"
+	"github.com/zenazn/goji"
+	"github.com/zenazn/goji/web"
 )
-
-///////////////
-// Utilities //
-///////////////
-
-type response map[string]interface{}
-
-func (r response) String() (s string) {
-	b, err := json.Marshal(r)
-	if err != nil {
-		s = ""
-		return
-	}
-	s = string(b)
-	return
-}
 
 //////////
 // Main //
@@ -55,7 +39,7 @@ func main() {
 	goji.Handle("/simulation", authenticated)
 	authenticated.Post("/simulation", simulateHandler)
 
-	log.Println("Booting retirement simulation server...")
+	log.Println("Booting retirement simulation server on port", port)
 	goji.Serve()
 }
 
@@ -99,14 +83,31 @@ func health(w http.ResponseWriter, r *http.Request) {
 }
 
 func simulateHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	start := time.Now()
-	apiResponse := simulation.ValidateAndHandleJsonInput(r)
+	apiResponse := simulation.ValidateAndHandleJsonInput(r.Body)
 	end := time.Since(start)
 
-	log.Printf("Processing request from %s in %vs", r.RemoteAddr, end)
+	log.Printf("Processed request from %s in %vs", r.RemoteAddr, end)
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(apiResponse.StatusCode)
 	fmt.Fprint(w, response(apiResponse.Response))
+	return
+}
+
+///////////////
+// Utilities //
+///////////////
+
+type response map[string]interface{}
+
+func (r response) String() (s string) {
+	b, err := json.Marshal(r)
+	if err != nil {
+		s = ""
+		return
+	}
+	s = string(b)
 	return
 }

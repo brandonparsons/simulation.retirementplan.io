@@ -1,33 +1,26 @@
-// Package simulation contains all of the business logic required to simulate
-// user's retirement. At the time of writing, this ingests JSON data and outputs
-// JSON data.
 package simulation
 
 import (
 	"encoding/json"
+	"io"
+	"log"
 	"net/http"
+
+	"github.com/kr/pretty"
 )
 
-type ApiResponse struct {
-	Response   map[string]interface{}
-	StatusCode int
-}
-
-type simulationData struct {
-	InTodaysDollars          bool                    `json:"in_todays_dollars"`
+type SimulationData struct {
 	NumberOfTrials           int                     `json:"number_of_trials"`
 	CholeskyDecomposition    []float64               `json:"cholesky_decomposition"`
-	Inflation                distribution            `json:"inflation"`
-	RealEstate               distribution            `json:"real_estate"`
-	AssetPerformanceData     map[string]distribution `json:"asset_performance_data"`
-	Parameters               parameters              `json:"simulation_parameters"`
-	Expenses                 []expense               `json:"expenses"`
-	SelectedPortfolioWeights portfolioWeights        `json:"selected_portfolio_weights"`
+	Inflation                Distribution            `json:"inflation"`
+	RealEstate               Distribution            `json:"real_estate"`
+	AssetPerformanceData     map[string]Distribution `json:"asset_performance_data"`
+	Parameters               Parameters              `json:"simulation_parameters"`
+	Expenses                 []Expense               `json:"expenses"`
+	SelectedPortfolioWeights map[string]float64      `json:"selected_portfolio_weights"`
 }
 
-type portfolioWeights map[string]float64
-
-type parameters struct {
+type Parameters struct {
 	Male                   bool    `json:"male"`
 	Married                bool    `json:"married"`
 	Retired                bool    `json:"retired"`
@@ -53,20 +46,25 @@ type parameters struct {
 	NewHomeRelVal          float64 `json:"new_home_relative_value"`
 }
 
-type distribution struct {
+type Distribution struct {
 	Mean   float64 `json:"mean"`
 	StdDev float64 `json:"std_dev"`
+}
+
+type ApiResponse struct {
+	Response   map[string]interface{}
+	StatusCode int
 }
 
 // ValidateAndHandleJsonInput is the main entry point into this package given
 // a POST'ed JSON body.
 // Receiver: None
-// Params: r *http.Request
+// Params: j io.ReadCloser (via r.Body)
 // Returns: ApiResponse {Response/StatusCode}
-func ValidateAndHandleJsonInput(r *http.Request) ApiResponse {
-	decoder := json.NewDecoder(r.Body)
+func ValidateAndHandleJsonInput(j io.ReadCloser) ApiResponse {
+	decoder := json.NewDecoder(j)
 
-	var simulationData simulationData
+	var simulationData SimulationData
 
 	err := decoder.Decode(&simulationData)
 	if err != nil {
@@ -79,8 +77,8 @@ func ValidateAndHandleJsonInput(r *http.Request) ApiResponse {
 		}
 	}
 
-	prettyPrint(simulationData)
-	resp := simulationData.simulate()
+	log.Printf("%# v", pretty.Formatter(simulationData))
+	resp := simulationData.Simulate()
 
 	return ApiResponse{
 		Response: map[string]interface{}{

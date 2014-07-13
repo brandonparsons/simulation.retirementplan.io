@@ -34,10 +34,10 @@ type returnsList []float64
 
 // generateAssetPerformance generates performance results for real estate,
 // inflation and the overall portfolio, and returns as a struct of float arrays.
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: numberOfMonths int -- number of periods to model
 // Returns: assetPerformanceResults
-func (s *simulationData) generateAssetPerformance(numberOfMonths int) assetPerformanceResults {
+func (s *SimulationData) generateAssetPerformance(numberOfMonths int) assetPerformanceResults {
 	return assetPerformanceResults{
 		realEstatePerformance: s.realEstateRandoms(numberOfMonths),
 		inflationPerformance:  s.inflationRandoms(numberOfMonths),
@@ -47,10 +47,10 @@ func (s *simulationData) generateAssetPerformance(numberOfMonths int) assetPerfo
 
 // generatePortfolioPerformance Consolidates the asset-level data into a single
 // value for the user's selected portfolio.
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: numberOfMonths int -- number of periods to model
 // Returns: returnsList ([]float64)
-func (s *simulationData) generatePortfolioPerformance(numberOfMonths int) returnsList {
+func (s *SimulationData) generatePortfolioPerformance(numberOfMonths int) returnsList {
 	assetPerformance := s.generateReturns(numberOfMonths)
 	/* assetPerformance is of the following form:
 		{
@@ -96,10 +96,10 @@ func (s *simulationData) generatePortfolioPerformance(numberOfMonths int) return
 
 // generateReturns generates performance specifically for assets, and returns
 // separately by asset class as a map
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: numberOfMonths int -- number of periods to model
 // Returns: returnResultsByAsset
-func (s *simulationData) generateReturns(numberOfMonths int) returnResultsByAsset {
+func (s *SimulationData) generateReturns(numberOfMonths int) returnResultsByAsset {
 	assetPerformanceData := s.AssetPerformanceData // map[string]Distribution
 	assetClassIds := s.assetClassIds()             // []string
 	numberOfAssets := len(assetClassIds)
@@ -142,8 +142,7 @@ func (s *simulationData) generateReturns(numberOfMonths int) returnResultsByAsse
 	/* Convert prices to relative returns. */
 	// Add T=0, price=1.0
 	initialPrices := goMatrix.Ones(1, numberOfAssets)
-	augmentedPrices, err := initialPrices.Stack(prices)
-	panicIf(err)
+	augmentedPrices, _ := initialPrices.Stack(prices)
 
 	// Create base matrix
 	asRelativeReturns := goMatrix.Zeros(numberOfMonths, numberOfAssets)
@@ -182,10 +181,10 @@ func (s *simulationData) generateReturns(numberOfMonths int) returnResultsByAsse
 
 // choleskyMatrix takes the array of floats provided by the JSON data, and
 // converts it to a matrix.
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: none
 // Returns: *goMatrix.DenseMatrix
-func (s *simulationData) choleskyMatrix() *goMatrix.DenseMatrix {
+func (s *SimulationData) choleskyMatrix() *goMatrix.DenseMatrix {
 	vals := s.CholeskyDecomposition
 	noOfVals := float64(len(vals))
 	noRows := int(math.Pow(noOfVals, 0.5))
@@ -193,20 +192,20 @@ func (s *simulationData) choleskyMatrix() *goMatrix.DenseMatrix {
 }
 
 // inflationRandoms generates random inflation performance of a given length
-// based on the statistics in the simulationData struct
-// Receiver: simulationData
+// based on the statistics in the SimulationData struct
+// Receiver: SimulationData
 // Params: numberOfMonths int -- number of periods to generate performance for
 // Returns: returnsList
-func (s *simulationData) inflationRandoms(numberOfMonths int) returnsList {
+func (s *SimulationData) inflationRandoms(numberOfMonths int) returnsList {
 	return generateRandomsFromDistribution(s.Inflation, numberOfMonths)
 }
 
 // realEstateRandoms generates random real estate performance of a given length
-// based on the statistics in the simulationData struct
-// Receiver: simulationData
+// based on the statistics in the SimulationData struct
+// Receiver: SimulationData
 // Params: numberOfMonths int -- number of periods to generate performance for
 // Returns: returnsList
-func (s *simulationData) realEstateRandoms(numberOfMonths int) returnsList {
+func (s *SimulationData) realEstateRandoms(numberOfMonths int) returnsList {
 	return generateRandomsFromDistribution(s.RealEstate, numberOfMonths)
 }
 
@@ -214,10 +213,10 @@ func (s *simulationData) realEstateRandoms(numberOfMonths int) returnsList {
 // decomposition - i.e. it creates the random normal matrix, and applies the
 // cholesky matrix. The number of assets is implied from the cholesky
 // decomposition matrix size.
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: numberOfMonths int -- number of periods to generate performance for
 // Returns: *goMatrix.DenseMatrix
-func (s *simulationData) applyCholeskyDecomposition(numberOfMonths int) *goMatrix.DenseMatrix {
+func (s *SimulationData) applyCholeskyDecomposition(numberOfMonths int) *goMatrix.DenseMatrix {
 	choleskyDecomposition := s.choleskyMatrix()
 	numberOfAssets := choleskyDecomposition.Cols()
 	randomValueMatrix := randomNormalsMatrix(numberOfMonths, numberOfAssets)
@@ -241,10 +240,10 @@ func (s *simulationData) applyCholeskyDecomposition(numberOfMonths int) *goMatri
 
 // assetClassIds returns the asset class IDs of interest - those that the user
 // has invested in.
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: None
 // Returns: []string
-func (s *simulationData) assetClassIds() []string {
+func (s *SimulationData) assetClassIds() []string {
 	mapWithAssetClasses := s.SelectedPortfolioWeights
 	assetClassIds := make([]string, len(mapWithAssetClasses))
 	i := 0
@@ -259,10 +258,10 @@ func (s *simulationData) assetClassIds() []string {
 
 // generateRandomsFromDistribution is a utility method that will generate a set
 // of random values from a given normal distribution
-// Params: distribution distribution -- contains stats
+// Params: distribution Distribution -- contains stats
 // Params: numberOfMonths int -- number of periods to generate randoms for
 // Returns: []float64
-func generateRandomsFromDistribution(distribution distribution, numberOfMonths int) []float64 {
+func generateRandomsFromDistribution(distribution Distribution, numberOfMonths int) []float64 {
 	results := make([]float64, numberOfMonths)
 	for i := range results {
 		sample := rand.NormFloat64()*distribution.StdDev + distribution.Mean

@@ -1,3 +1,6 @@
+// Package simulation contains all of the business logic required to simulate
+// user's retirement. At the time of writing, this ingests JSON data and outputs
+// JSON data.
 package simulation
 
 import goStats "github.com/GaryBoone/GoStats/stats"
@@ -22,7 +25,7 @@ type simulationTimeStep struct {
 // cover, based on the user's ages.
 // Params: none
 // Returns: integer
-func (s *simulationData) numberOfMonthsToSimulate() int {
+func (s *SimulationData) numberOfMonthsToSimulate() int {
 	male := s.Parameters.MaleAge
 	female := s.Parameters.FemaleAge
 
@@ -40,10 +43,10 @@ func (s *simulationData) numberOfMonthsToSimulate() int {
 }
 
 // simulate is the main call for simulations - it runs all of the trials etc.
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: none
 // Returns: simulationResponse ([]trialResult)
-func (s *simulationData) simulate() simulationResponse {
+func (s *SimulationData) Simulate() simulationResponse {
 	n := s.NumberOfTrials
 	trialResults := make([]trialResult, n)
 
@@ -69,10 +72,10 @@ func (s *simulationData) simulate() simulationResponse {
 
 // runIndividualSimulation is a single loop through the simulation. It is called
 // by the `simulate` function
-// Receiver: simulationData
+// Receiver: SimulationData
 // Params: timeSteps []*timeStep -- prebuilt date steps with expenses applied
 // Returns: trialResult ([]simulationTimeStep)
-func (s *simulationData) runIndividualSimulation(timeSteps []*timeStep) trialResult {
+func (s *SimulationData) runIndividualSimulation(timeSteps []*timeStep) trialResult {
 
 	// Copy in data from timeSteps (includes date and expenses)
 	trialResult := make([]simulationTimeStep, len(timeSteps))

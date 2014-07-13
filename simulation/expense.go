@@ -1,6 +1,6 @@
 package simulation
 
-type expense struct {
+type Expense struct {
 	Amount    float64 `json:"amount"`
 	Frequency string  `json:"frequency"`
 	OneTimeOn int     `json:"onetime_on"`
@@ -11,7 +11,7 @@ type expense struct {
 // Receiver: Expense
 // Params: None
 // Returns: bool
-func (e *expense) isOnetime() bool {
+func (e *Expense) isOnetime() bool {
 	return e.Frequency == "onetime"
 }
 
@@ -19,7 +19,7 @@ func (e *expense) isOnetime() bool {
 // Receiver: Expense
 // Params: None
 // Returns: bool
-func (e *expense) isWeekly() bool {
+func (e *Expense) isWeekly() bool {
 	return e.Frequency == "weekly"
 }
 
@@ -27,7 +27,7 @@ func (e *expense) isWeekly() bool {
 // Receiver: Expense
 // Params: None
 // Returns: bool
-func (e *expense) isMonthly() bool {
+func (e *Expense) isMonthly() bool {
 	return e.Frequency == "monthly"
 }
 
@@ -35,7 +35,7 @@ func (e *expense) isMonthly() bool {
 // Receiver: Expense
 // Params: None
 // Returns: bool
-func (e *expense) isAnnual() bool {
+func (e *Expense) isAnnual() bool {
 	return e.Frequency == "annual"
 }
 
@@ -43,7 +43,7 @@ func (e *expense) isAnnual() bool {
 // Receiver: Expense
 // Params: None
 // Returns: bool
-func (e *expense) ends() bool {
+func (e *Expense) ends() bool {
 	return e.Ends != 0
 }
 
@@ -51,7 +51,7 @@ func (e *expense) ends() bool {
 // Receiver: Expense
 // Params: currentDate -- int (UTC)
 // Returns: bool
-func (e *expense) hasEnded(currentDate int) bool {
+func (e *Expense) hasEnded(currentDate int) bool {
 	endDate := dateToInt(moveDateToEndOfMonth(dateToTime(e.Ends)))
 	current := dateToInt(moveDateToEndOfMonth(dateToTime(currentDate)))
 	return endDate < current
@@ -62,20 +62,20 @@ func (e *expense) hasEnded(currentDate int) bool {
 // Receiver: Expense
 // Params: currentDate -- int (UTC)
 // Returns: bool
-func (e *expense) isRelevantOnetimeDate(currentDate int) bool {
+func (e *Expense) isRelevantOnetimeDate(currentDate int) bool {
 	oneTime := dateToInt(moveDateToEndOfMonth(dateToTime(e.OneTimeOn)))
 	current := dateToInt(moveDateToEndOfMonth(dateToTime(currentDate)))
 	return oneTime == current
 }
 
 // filterExpenses splits expenses into buckets by frequency
-// Params: expenses -- []expense
-// Returns: map[string][]expense -- keys are frequencies
-func filterExpenses(expenses []expense) map[string][]expense {
-	weeklyExpenses := make([]expense, 0)
-	monthlyExpenses := make([]expense, 0)
-	annualExpenses := make([]expense, 0)
-	onetimeExpenses := make([]expense, 0)
+// Params: expenses -- []Expense
+// Returns: map[string][]Expense -- keys are frequencies
+func filterExpenses(expenses []Expense) map[string][]Expense {
+	weeklyExpenses := make([]Expense, 0)
+	monthlyExpenses := make([]Expense, 0)
+	annualExpenses := make([]Expense, 0)
+	onetimeExpenses := make([]Expense, 0)
 
 	for _, expense := range expenses {
 		if expense.isWeekly() {
@@ -91,7 +91,7 @@ func filterExpenses(expenses []expense) map[string][]expense {
 		}
 	}
 
-	return map[string][]expense{
+	return map[string][]Expense{
 		"weekly":  weeklyExpenses,
 		"monthly": monthlyExpenses,
 		"annual":  annualExpenses,

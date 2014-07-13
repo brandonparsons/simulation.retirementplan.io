@@ -28,7 +28,7 @@ func TestIsRelevantOnetimeDate(t *testing.T) {
 	aug := dateToInt(moveDateToEndOfMonth(dateToTime(1409529599)))
 	sep := dateToInt(moveDateToEndOfMonth(dateToTime(1412207999)))
 
-	e := &expense{Amount: 25000, Frequency: "onetime", OneTimeOn: aug, Ends: 0} // Aug 31, 2014
+	e := &Expense{Amount: 25000, Frequency: "onetime", OneTimeOn: aug, Ends: 0} // Aug 31, 2014
 
 	var res bool
 
@@ -59,15 +59,15 @@ func TestIsRelevantOnetimeDate(t *testing.T) {
 }
 
 func TestFilterExpenses(t *testing.T) {
-	expenses := []expense{
-		expense{Amount: 100, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 25, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 45, Frequency: "weekly", OneTimeOn: 0, Ends: 1406851199}, // Jul 31, 2014
-		expense{Amount: 50, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 300, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 3000, Frequency: "annual", OneTimeOn: 0, Ends: 1472687999}, // Aug 31, 2016
-		expense{Amount: 5000, Frequency: "annual", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 25000, Frequency: "onetime", OneTimeOn: 1409529599, Ends: 0}, // Aug 31, 2014
+	expenses := []Expense{
+		Expense{Amount: 100, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 25, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 45, Frequency: "weekly", OneTimeOn: 0, Ends: 1406851199}, // Jul 31, 2014
+		Expense{Amount: 50, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 300, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 3000, Frequency: "annual", OneTimeOn: 0, Ends: 1472687999}, // Aug 31, 2016
+		Expense{Amount: 5000, Frequency: "annual", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 25000, Frequency: "onetime", OneTimeOn: 1409529599, Ends: 0}, // Aug 31, 2014
 	}
 
 	ret := filterExpenses(expenses)

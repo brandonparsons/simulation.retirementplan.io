@@ -11,6 +11,8 @@ If using einhorn for zero-downtime deployment:
 - `gem install einhorn`
 - `einhorn -b 127.0.0.1:1234 -m manual go_retirement_simulation`
 
+Otherwise, build & run `server.go`
+
 Development
 ------------
 
@@ -27,6 +29,9 @@ Use `gin` for server reloading during development:
 
 - `AUTH_TOKEN=acbd gin`
 
+Profiling:
+
+- `bin/profile` -> Creates `callgraph.pdf` and `report.txt` in current directory
 
 Examples
 --------
@@ -37,8 +42,7 @@ require 'faraday'
 require 'json'
 
 payload = {
-    in_todays_dollars: true,
-    number_of_trials: 1000,
+    number_of_trials: 5,
     selected_portfolio_weights: { 
         "INTL-BOND" => 0.65, 
         "US-REALESTATE" => 0.30, 
@@ -119,7 +123,10 @@ payload = {
     }
 }
 
-conn = Faraday.new(:url => 'http://localhost:3000') do |faraday|
+URL = "http://localhost:3000" 
+# URL = "https://rp-simulation.herokuapp.com"
+
+conn = Faraday.new(url: URL) do |faraday|
   # faraday.response :logger                # log requests to STDOUT
   faraday.adapter  Faraday.default_adapter  # make requests with Net::HTTP
 end

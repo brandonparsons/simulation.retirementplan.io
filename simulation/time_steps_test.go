@@ -36,11 +36,11 @@ func TestMoveDateToEndOfMonth(t *testing.T) {
 }
 
 func TestApplyWeeklyExpenses(t *testing.T) {
-	weeklyExpenses := []expense{
-		expense{Amount: 100, Frequency: "weekly", OneTimeOn: 0, Ends: 1409529590}, // Just before Aug-31-2014. Moves up to end of aug, breaks in sept (doesn't apply to sept)
-		expense{Amount: 25, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 45, Frequency: "weekly", OneTimeOn: 0, Ends: 1412207999}, // On Sep 31, 2014. Breaks in oct (doesn't apply oct)
-		expense{Amount: 50, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
+	weeklyExpenses := []Expense{
+		Expense{Amount: 100, Frequency: "weekly", OneTimeOn: 0, Ends: 1409529590}, // Just before Aug-31-2014. Moves up to end of aug, breaks in sept (doesn't apply to sept)
+		Expense{Amount: 25, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 45, Frequency: "weekly", OneTimeOn: 0, Ends: 1412207999}, // On Sep 31, 2014. Breaks in oct (doesn't apply oct)
+		Expense{Amount: 50, Frequency: "weekly", OneTimeOn: 0, Ends: 0},
 	}
 
 	timeSteps := []*timeStep{
@@ -74,10 +74,10 @@ func TestApplyWeeklyExpenses(t *testing.T) {
 }
 
 func TestApplyMonthlyExpenses(t *testing.T) {
-	monthlyExpenses := []expense{
-		expense{Amount: 300, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
-		expense{Amount: 100, Frequency: "monthly", OneTimeOn: 0, Ends: 1409529590}, // Just before Aug-31-2014. Moves up to end of aug, breaks in sept (doesn't apply to sept)
-		expense{Amount: 45, Frequency: "monthly", OneTimeOn: 0, Ends: 1412207999},  // On Sep 31, 2014. Breaks in oct (doesn't apply oct)
+	monthlyExpenses := []Expense{
+		Expense{Amount: 300, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
+		Expense{Amount: 100, Frequency: "monthly", OneTimeOn: 0, Ends: 1409529590}, // Just before Aug-31-2014. Moves up to end of aug, breaks in sept (doesn't apply to sept)
+		Expense{Amount: 45, Frequency: "monthly", OneTimeOn: 0, Ends: 1412207999},  // On Sep 31, 2014. Breaks in oct (doesn't apply oct)
 	}
 
 	timeSteps := []*timeStep{
@@ -110,10 +110,10 @@ func TestApplyMonthlyExpenses(t *testing.T) {
 }
 
 func TestApplyAnnualExpenses(t *testing.T) {
-	annualExpenses := []expense{
-		expense{Amount: 1000, Frequency: "annual", OneTimeOn: 0, Ends: 1412207999}, // On Sep 31, 2014
-		expense{Amount: 3000, Frequency: "annual", OneTimeOn: 0, Ends: 1472687999}, // Aug 31, 2016
-		expense{Amount: 5000, Frequency: "annual", OneTimeOn: 0, Ends: 0},
+	annualExpenses := []Expense{
+		Expense{Amount: 1000, Frequency: "annual", OneTimeOn: 0, Ends: 1412207999}, // On Sep 31, 2014
+		Expense{Amount: 3000, Frequency: "annual", OneTimeOn: 0, Ends: 1472687999}, // Aug 31, 2016
+		Expense{Amount: 5000, Frequency: "annual", OneTimeOn: 0, Ends: 0},
 	}
 
 	timeSteps := []*timeStep{
@@ -156,11 +156,11 @@ func TestApplyAnnualExpenses(t *testing.T) {
 }
 
 func TestApplyOnetimeExpenses(t *testing.T) {
-	onetimeExpenses := []expense{
-		expense{Amount: 100, Frequency: "onetime", OneTimeOn: 1406851199, Ends: 0}, // Jul 31, 2014
-		expense{Amount: 210, Frequency: "onetime", OneTimeOn: 1409529599, Ends: 0}, // Aug 31, 2014
-		expense{Amount: 320, Frequency: "onetime", OneTimeOn: 1409529590, Ends: 0}, // Just before Aug-31-2014. Moves up to end of aug.
-		expense{Amount: 430, Frequency: "onetime", OneTimeOn: 1412207999, Ends: 0}, // On Sep 31, 2014
+	onetimeExpenses := []Expense{
+		Expense{Amount: 100, Frequency: "onetime", OneTimeOn: 1406851199, Ends: 0}, // Jul 31, 2014
+		Expense{Amount: 210, Frequency: "onetime", OneTimeOn: 1409529599, Ends: 0}, // Aug 31, 2014
+		Expense{Amount: 320, Frequency: "onetime", OneTimeOn: 1409529590, Ends: 0}, // Just before Aug-31-2014. Moves up to end of aug.
+		Expense{Amount: 430, Frequency: "onetime", OneTimeOn: 1412207999, Ends: 0}, // On Sep 31, 2014
 	}
 
 	timeSteps := []*timeStep{

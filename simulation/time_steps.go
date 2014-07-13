@@ -78,9 +78,9 @@ func isYearEnd(date time.Time) bool {
 // pointers to timesteps so we can keep mapping various expenses to same set
 // of timeSteps.
 // Receiver: None
-// Params: timeSteps -- []*timeStep, weeklyExpenses -- []expense
+// Params: timeSteps -- []*timeStep, weeklyExpenses -- []Expense
 // Returns: []*timeStep
-func applyWeeklyExpenses(timeSteps []*timeStep, weeklyExpenses []expense) []*timeStep {
+func applyWeeklyExpenses(timeSteps []*timeStep, weeklyExpenses []Expense) []*timeStep {
 	for _, expense := range weeklyExpenses {
 		monthlyAmount := expense.Amount * (52.0 / 12)
 		for _, timeStep := range timeSteps {
@@ -99,9 +99,9 @@ func applyWeeklyExpenses(timeSteps []*timeStep, weeklyExpenses []expense) []*tim
 // pointers to timesteps so we can keep mapping various expenses to same set
 // of timeSteps.
 // Receiver: None
-// Params: timeSteps -- []*timeStep, monthlyExpenses -- []expense
+// Params: timeSteps -- []*timeStep, monthlyExpenses -- []Expense
 // Returns: []*timeStep
-func applyMonthlyExpenses(timeSteps []*timeStep, monthlyExpenses []expense) []*timeStep {
+func applyMonthlyExpenses(timeSteps []*timeStep, monthlyExpenses []Expense) []*timeStep {
 	for _, expense := range monthlyExpenses {
 		for _, timeStep := range timeSteps {
 			if expense.ends() && expense.hasEnded(timeStep.date) {
@@ -119,9 +119,9 @@ func applyMonthlyExpenses(timeSteps []*timeStep, monthlyExpenses []expense) []*t
 // pointers to timesteps so we can keep mapping various expenses to same set
 // of timeSteps.
 // Receiver: None
-// Params: timeSteps -- []*timeStep, annualExpenses -- []expense
+// Params: timeSteps -- []*timeStep, annualExpenses -- []Expense
 // Returns: []*timeStep
-func applyAnnualExpenses(timeSteps []*timeStep, annualExpenses []expense) []*timeStep {
+func applyAnnualExpenses(timeSteps []*timeStep, annualExpenses []Expense) []*timeStep {
 	for _, expense := range annualExpenses {
 		for _, timeStep := range timeSteps {
 			if expense.ends() && expense.hasEnded(timeStep.date) {
@@ -142,9 +142,9 @@ func applyAnnualExpenses(timeSteps []*timeStep, annualExpenses []expense) []*tim
 // pointers to timesteps so we can keep mapping various expenses to same set
 // of timeSteps.
 // Receiver: None
-// Params: timeSteps -- []*timeStep, onetimeExpenses -- []expense
+// Params: timeSteps -- []*timeStep, onetimeExpenses -- []Expense
 // Returns: []*timeStep
-func applyOnetimeExpenses(timeSteps []*timeStep, onetimeExpenses []expense) []*timeStep {
+func applyOnetimeExpenses(timeSteps []*timeStep, onetimeExpenses []Expense) []*timeStep {
 	for _, expense := range onetimeExpenses {
 		for _, timeStep := range timeSteps {
 			if expense.isRelevantOnetimeDate(timeStep.date) {
@@ -161,7 +161,7 @@ func applyOnetimeExpenses(timeSteps []*timeStep, onetimeExpenses []expense) []*t
 // expenses as appropriate.
 // Params: numberOfMonths int -- how many months to simulate
 // Returns: []timeStep
-func (s *simulationData) applyExpenses(numberOfMonths int) []*timeStep {
+func (s *SimulationData) applyExpenses(numberOfMonths int) []*timeStep {
 	// This is called ONCE at the beginning of a set of simulation trials. Do
 	// **not** do any run-specific calculations here.
 
