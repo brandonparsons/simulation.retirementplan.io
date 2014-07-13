@@ -1,7 +1,5 @@
 package simulation
 
-import goStats "github.com/GaryBoone/GoStats/stats"
-
 type SimulationData struct {
 	NumberOfTrials           int                     `json:"number_of_trials"`
 	CholeskyDecomposition    []float64               `json:"cholesky_decomposition"`
@@ -44,33 +42,26 @@ type Distribution struct {
 	StdDev float64 `json:"std_dev"`
 }
 
-// numberOfMonthsToSimulate determines the number of months the simulation must
-// cover, based on the user's ages.
-// Params: none
-// Returns: integer
-func (s *SimulationData) numberOfMonthsToSimulate() int {
-	male := s.Parameters.MaleAge
-	female := s.Parameters.FemaleAge
-
-	var yearsToRun int
-	if male == 0 {
-		yearsToRun = 120 - female
-	} else if female == 0 {
-		yearsToRun = 120 - male
-	} else {
-		ages := []float64{float64(s.Parameters.MaleAge), float64(s.Parameters.FemaleAge)}
-		yearsToRun = 120 - int(goStats.StatsMin(ages))
-	}
-
-	return yearsToRun * 12
+type simulationTimeStep struct {
+	assets        float64
+	income        float64
+	expenses      float64
+	jsTime        int
+	maleAge       int
+	femaleAge     int
+	maleAlive     bool
+	femaleAlive   bool
+	maleRetired   bool
+	femaleRetired bool
 }
 
 // runIndividualSimulation is a single loop through the simulation. It is called
 // by the `simulate` function
 // Receiver: SimulationData
 // Params: timeSteps []*timeStep -- prebuilt date steps with expenses applied
+// Params: numberOfMonthsToSimulate -- int
 // Returns: []simulationTimeStep
-func (s *SimulationData) runIndividualSimulation(timeSteps []*timeStep) []simulationTimeStep {
+func (s *SimulationData) runIndividualSimulation(timeSteps []*timeStep, numberOfMonthsToSimulate int) []simulationTimeStep {
 
 	// Copy in data from timeSteps (includes date and expenses)
 	trialResult := make([]simulationTimeStep, len(timeSteps))
@@ -91,7 +82,7 @@ func (s *SimulationData) runIndividualSimulation(timeSteps []*timeStep) []simula
 
 	oneHasAlreadyDied := false // Outside of loop -- using as flag
 
-	assetPerformance := s.generateAssetPerformance(s.numberOfMonthsToSimulate())
+	assetPerformance := s.generateAssetPerformance(numberOfMonthsToSimulate)
 
 	var maleAlive bool
 	var femaleAlive bool

@@ -42,7 +42,7 @@ require 'faraday'
 require 'json'
 
 payload = {
-    number_of_trials: 5,
+    number_of_trials: 1000,
     selected_portfolio_weights: { 
         "INTL-BOND" => 0.65, 
         "US-REALESTATE" => 0.30, 
