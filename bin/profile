@@ -3,15 +3,15 @@
 pwd = File.expand_path(File.dirname(__FILE__))
 puts "Building/running profiler program, copying output to CWD, running pprof tools....."
 
-`go install #{pwd}/../profiler/profiler.go`
-result = `$GOPATH/bin/profiler 2>&1`
+`go install #{pwd}/../cmd/sim-profiler/main.go`
+result = `$GOPATH/bin/sim-profiler 2>&1`
 
 output_file = result.split("\n").first.match(/.+(\/var\/.*)/)[1]
 # --> "/var/folders/4t/khbw8j_x19342lkbf26l5tj40000gn/T/profile841577082/cpu.pprof"
 
 `cp #{output_file} .`
-`go tool pprof --pdf $GOPATH/bin/profiler cpu.pprof > callgraph.pdf`
-`go tool pprof --text $GOPATH/bin/profiler cpu.pprof > callgraph.txt`
-`go tool pprof --svg $GOPATH/bin/profiler cpu.pprof > callgraph.svg`
+`go tool pprof --pdf $GOPATH/bin/sim-profiler cpu.pprof > callgraph.pdf`
+`go tool pprof --text $GOPATH/bin/sim-profiler cpu.pprof > callgraph.txt`
+`go tool pprof --svg $GOPATH/bin/sim-profiler cpu.pprof > callgraph.svg`
 
 puts "Done!"
