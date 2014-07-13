@@ -1,10 +1,17 @@
 {
 	"ImportPath": "bitbucket.org/retirementplanio/simulation.retirementplan.io",
 	"GoVersion": "go1.2",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/GaryBoone/GoStats/stats",
 			"Rev": "1993eafbef57be29ee8f5eb9d26a22f20ff3c207"
+		},
+		{
+			"ImportPath": "github.com/davecheney/profile",
+			"Rev": "1249fd3118c6ceaaee0ce774c865feac10403687"
 		},
 		{
 			"ImportPath": "github.com/jinzhu/now",
