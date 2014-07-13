@@ -1,1 +1,1 @@
-web: simulation.retirementplan.io
+web: server
