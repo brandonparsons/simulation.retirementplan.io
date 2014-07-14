@@ -46,7 +46,7 @@ type simulationTimeStep struct {
 	assets        float64
 	income        float64
 	expenses      float64
-	jsTime        int
+	dateInt       int
 	maleAge       int
 	femaleAge     int
 	maleAlive     bool
@@ -68,7 +68,7 @@ func (s *SimulationData) runIndividualSimulation(timeSteps []*timeStep, numberOf
 	for i, v := range timeSteps {
 		trialResult[i] = simulationTimeStep{
 			expenses: v.expenses,
-			jsTime:   v.date * 1000,
+			dateInt:  v.date, // Used to be * 1000 for javascript, but we will munge this in ruby as we need string formatted dates
 		}
 	}
 

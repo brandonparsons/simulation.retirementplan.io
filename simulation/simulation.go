@@ -35,7 +35,7 @@ type summarizedTimeStep struct {
 	ExpensesCIHigh float64 `json:"expenses_ci_high"`
 
 	OutOfMoneyPercentage float64 `json:"out_of_money_percentage"`
-	JsTime               int     `json:"js_time"`
+	DateInt              int     `json:"date_int"`
 }
 
 // ValidateAndHandleJsonInput is the main entry point into this package for the
@@ -127,8 +127,8 @@ func summarizeResults(detailedData [][]simulationTimeStep) []summarizedTimeStep 
 
 	for period := 0; period < numberOfPeriods; period++ {
 
-		outOfMoneyOccurences := 0.0              // initialize value
-		jsTime := detailedData[0][period].jsTime // same in every trial
+		outOfMoneyOccurences := 0.0                // initialize value
+		dateInt := detailedData[0][period].dateInt // same in every trial
 
 		/* 	Transpose the arrays so that we have a list of asset/income/expense
 		results by period, instead of by trial. */
@@ -192,7 +192,7 @@ func summarizeResults(detailedData [][]simulationTimeStep) []summarizedTimeStep 
 			ExpensesCIHigh: expensesMean + expensesCIFactor,
 
 			OutOfMoneyPercentage: outOfMoneyPercentage,
-			JsTime:               jsTime,
+			DateInt:              dateInt,
 		}
 	}
 
