@@ -35,7 +35,7 @@ type summarizedTimeStep struct {
 	ExpensesCIHigh float64 `json:"expenses_ci_high"`
 
 	OutOfMoneyPercentage float64 `json:"out_of_money_percentage"`
-	DateInt              int     `json:"date_int"`
+	DateInt              int     `json:"date"`
 }
 
 // ValidateAndHandleJsonInput is the main entry point into this package for the
