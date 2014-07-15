@@ -131,7 +131,7 @@ URL = "http://rp-simulation.dev"
 conn = Faraday.new(url: URL) do |faraday|
   # faraday.response :logger                # log requests to STDOUT
   faraday.adapter  Faraday.default_adapter  # make requests with Net::HTTP
-end
+end;
 
 def get_response(conn, payload)
     response = JSON.parse(conn.post do |req|
@@ -141,7 +141,7 @@ def get_response(conn, payload)
       req.body = payload.to_json
     end.body)
     return response
-end
+end;
 
 ap get_response(conn, payload)
 
