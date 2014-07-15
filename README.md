@@ -121,9 +121,10 @@ payload = {
         sell_house_in: 25,
         new_home_relative_value: 65 
     }
-}
+};
 
-URL = "http://localhost:3000" 
+URL = "http://rp-simulation.dev"
+# URL = "http://localhost:3000" 
 # URL = "http://localhost:8000" 
 # URL = "https://rp-simulation.herokuapp.com"
 
