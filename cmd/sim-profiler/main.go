@@ -80,8 +80,9 @@ func main() {
 			"INTL-BOND":        simulation.Distribution{Mean: 0.006604477, StdDev: 0.0216913127},
 			"US-MED-CORP-BOND": simulation.Distribution{Mean: 0.0063501862, StdDev: 0.0138674297},
 		},
-		Parameters: simulation.Parameters{Male: true, Married: false, Retired: false, MaleAge: 30, RetirementAgeMale: 50, FemaleAge: 0, RetirementAgeFemale: 0, ExpensesMultiplier: 0, FractionSingleIncome: 0, StartingAssets: 50000, Income: 50000, CurrentTax: 35, SalaryIncrease: 3, IncomeInflationIndex: 0, ExpensesInflationIndex: 100, RetirementIncome: 1000, RetirementExpenses: 85, RetirementTax: 35, LifeInsurance: 1200, IncludeHome: false, HomeValue: 0, SellHouseIn: 0, NewHomeRelVal: 0},
+		Parameters: simulation.Parameters{Male: true, Married: true, Retired: false, MaleAge: 30, RetirementAgeMale: 65, FemaleAge: 30, RetirementAgeFemale: 31, ExpensesMultiplier: 1.6, FractionSingleIncome: 65, StartingAssets: 150000, Income: 200000, CurrentTax: 45, SalaryIncrease: 3, IncomeInflationIndex: 0, ExpensesInflationIndex: 100, RetirementIncome: 1000, RetirementExpenses: 100, RetirementTax: 35, LifeInsurance: 25000, IncludeHome: false, HomeValue: 0, SellHouseIn: 0, NewHomeRelVal: 0},
 		Expenses: []simulation.Expense{
+			{Amount: 25000, Frequency: "onetime", OneTimeOn: 1446001252, Ends: 0},
 			simulation.Expense{Amount: 400, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
 			simulation.Expense{Amount: 250, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
 			simulation.Expense{Amount: 300, Frequency: "monthly", OneTimeOn: 0, Ends: 0},
